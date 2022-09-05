@@ -764,6 +764,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_test2"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+]
+
+[[package]]
 name = "bevy_text"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -887,14 +895,6 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
  "winit",
-]
-
-[[package]]
-name = "bevy_yt_2"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
 ]
 
 [[package]]

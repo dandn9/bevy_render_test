@@ -1,27 +1,19 @@
-use std::f32::consts::PI;
-
-use bevy::prelude::*;
-use bevy_inspector_egui::WorldInspectorPlugin;
-
-pub const HEIGHT: f32 = 720.0;
-pub const WIDTH: f32 = 1280.0;
+use bevy::{
+    prelude::*,
+    render::{mesh::Indices, render_resource::PrimitiveTopology},
+};
+use bevy_test2::Player;
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::rgb(0.2, 0.2, 0.2)))
-        .insert_resource(WindowDescriptor {
-            width: WIDTH,
-            height: HEIGHT,
-            title: "Bevy Tower Defense".to_string(),
-            resizable: false,
-            ..Default::default()
-        })
         .add_plugins(DefaultPlugins)
-        .add_plugin(WorldInspectorPlugin::new())
-        .register_type::<Tower>()
-        .add_startup_system(spawn_basic_scene)
         .add_startup_system(spawn_camera)
-        .add_system(tower_shooting)
+        .add_startup_system(spawn_player)
+        // .add_plugin(WorldInspectorPlugin::new())
+        // .register_type::<Tower>()
+        // .add_startup_system(spawn_basic_scene)
+        // .add_startup_system(spawn_camera)
+        // .add_system(tower_shooting)
         .run();
 }
 
@@ -32,69 +24,98 @@ fn spawn_camera(mut commands: Commands) {
     });
 }
 
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub struct Tower {
-    shooting_timer: Timer,
+fn create_triangle() -> Mesh {
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    mesh.insert_attribute(
+        Mesh::ATTRIBUTE_POSITION,
+        vec![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]],
+    );
+
+    mesh.compute_flat_normals();
+    // mesh.compute_aabb();
+    mesh.set_indices(Some(Indices::U32(vec![0, 1, 2])));
+    mesh
 }
 
-fn tower_shooting(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut towers: Query<&mut Tower>,
-    time: Res<Time>,
-) {
-    for mut tower in &mut towers {
-        tower.shooting_timer.tick(time.delta());
-        if tower.shooting_timer.just_finished() {
-            let spawn_transform =
-                Transform::from_xyz(0.0, 0.7, 0.6).with_rotation(Quat::from_rotation_y(-PI / 2.0));
-
-            commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
-                    material: materials.add(Color::rgb(0.87, 0.44, 0.42).into()),
-                    transform: spawn_transform,
-                    ..default()
-                })
-                .insert(Name::new("Bullet"));
-        }
-    }
-}
-
-fn spawn_basic_scene(
+fn spawn_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
-            material: materials.add(Color::rgb(0.3, 0.5, 0.6).into()),
-            ..default()
-        })
-        .insert(Name::new("Ground"));
-
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb(1.0, 0.1, 0.1).into()),
-            transform: Transform::from_xyz(0.0, 0.5, 0.0),
-            ..default()
-        })
-        .insert(Name::new("Cube"))
-        .insert(Tower {
-            shooting_timer: Timer::from_seconds(1.0, true),
-        });
-
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1500.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
+    commands.spawn_bundle(MaterialMeshBundle {
+        mesh: meshes.add(create_triangle()),
+        material: materials.add(Color::rgb(0.1, 0.1, 0.1).into()),
+        ..Default::default()
     });
+
+    // commands.spawn().insert(Mesh::from(shape::Box {
+    // ..Default::default()
+    // }));
 }
+
+// #[derive(Component, Reflect, Default)]
+// #[reflect(Component)]
+// pub struct Tower {
+//     shooting_timer: Timer,
+// }
+
+// fn tower_shooting(
+//     mut commands: Commands,
+//     mut meshes: ResMut<Assets<Mesh>>,
+//     mut materials: ResMut<Assets<StandardMaterial>>,
+//     mut towers: Query<&mut Tower>,
+//     time: Res<Time>,
+// ) {
+//     for mut tower in &mut towers {
+//         tower.shooting_timer.tick(time.delta());
+//         if tower.shooting_timer.just_finished() {
+//             let spawn_transform =
+//                 Transform::from_xyz(0.0, 0.7, 0.6).with_rotation(Quat::from_rotation_y(-PI / 2.0));
+
+//             commands
+//                 .spawn_bundle(PbrBundle {
+//                     mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
+//                     material: materials.add(Color::rgb(0.87, 0.54, 0.46).into()),
+//                     transform: spawn_transform,
+//                     ..default()
+//                 })
+//                 .insert(Name::new("Bullet"));
+//         }
+//     }
+// }
+
+// fn spawn_basic_scene(
+//     mut commands: Commands,
+//     mut meshes: ResMut<Assets<Mesh>>,
+//     mut materials: ResMut<Assets<StandardMaterial>>,
+// ) {
+//     commands
+//         .spawn_bundle(PbrBundle {
+//             mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
+//             material: materials.add(Color::rgb(0.3, 0.5, 0.6).into()),
+//             ..default()
+//         })
+//         .insert(Name::new("Ground"));
+
+//     commands
+//         .spawn_bundle(PbrBundle {
+//             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+//             material: materials.add(Color::rgb(1.0, 0.1, 0.1).into()),
+//             transform: Transform::from_xyz(0.0, 0.5, 0.0),
+//             ..default()
+//         })
+//         .insert(Name::new("Cube"))
+//         .insert(Tower {
+//             shooting_timer: Timer::from_seconds(1.0, true),
+//         });
+
+//     commands.spawn_bundle(PointLightBundle {
+//         point_light: PointLight {
+//             intensity: 1500.0,
+//             shadows_enabled: true,
+//             ..default()
+//         },
+//         transform: Transform::from_xyz(4.0, 8.0, 4.0),
+//         ..default()
+//     });
+// }
