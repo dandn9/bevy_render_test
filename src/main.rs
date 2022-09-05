@@ -1,15 +1,18 @@
 use bevy::{
     prelude::*,
-    render::{mesh::Indices, render_resource::PrimitiveTopology},
+    render::mesh::{self, PrimitiveTopology},
 };
+
 use bevy_test2::Player;
+
+use bevy_inspector_egui::prelude::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_player)
-        // .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(WorldInspectorPlugin::new())
         // .register_type::<Tower>()
         // .add_startup_system(spawn_basic_scene)
         // .add_startup_system(spawn_camera)
@@ -25,15 +28,28 @@ fn spawn_camera(mut commands: Commands) {
 }
 
 fn create_triangle() -> Mesh {
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.insert_attribute(
-        Mesh::ATTRIBUTE_POSITION,
-        vec![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]],
-    );
+    let vertices = [
+        ([0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0]),
+        ([1.0, 2.0, 1.0], [0.0, 1.0, 0.0], [1.0, 1.0]),
+        ([2.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0]),
+    ];
+    let indices = mesh::Indices::U32(vec![0, 2, 1, 0, 3, 2]);
+    let mut positions = Vec::new();
+    let mut normals = Vec::new();
+    let mut uvs = Vec::new();
 
-    mesh.compute_flat_normals();
-    // mesh.compute_aabb();
-    mesh.set_indices(Some(Indices::U32(vec![0, 1, 2])));
+    for (position, normal, uv) in vertices.iter() {
+        positions.push(*position);
+        normals.push(*normal);
+        uvs.push(*uv);
+    }
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+
+    mesh.set_indices(Some(indices));
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+
     mesh
 }
 
